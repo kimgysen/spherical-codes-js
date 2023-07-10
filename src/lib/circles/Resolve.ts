@@ -1,83 +1,95 @@
 import Circle from "../../domain/Circle";
 
-const offset = [
-	[-100, -100], [-100, 0], [-100, 100],
-	[0, -100], [0, 0], [0, 100],
-	[100, -100], [100, 0], [100, 100],
-]
 
-const numCircles = 19;
+const SCALE = 100;
+const NUM_CIRCLES = 2;
+let NR_REMOVE_COLLISIONS = 1;
 
 
-const distanceSqr = (x0, y0, x1, y1) => {
-	return (x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0)
-}
+/**
+ * Get distance between two points, taken into account Thoroidal space & vector direction
+ */
+const getDeltaXY = (c0: Circle, c1: Circle, scale = 100): any => {
+	const [dxInt, dyInt] = [c1.x - c0.x, c1.y - c0.y];
+	const [dxIntAbs, dyIntAbs] = [Math.abs(dxInt), Math.abs(dyInt)];
 
-const thoroidalDistance = () => {
+	const [dirX, dirY] = [dxInt / dxInt, dyInt / dyInt]; // Vector direction
+	const [dxExt, dyExt] = [(scale - dxIntAbs) * -dirX, (scale - dyIntAbs) * -dirY];
+	const [dxExtAbs, dyExtAbs] = [Math.abs(dxExt), Math.abs(dyExt)];
 
-}
-
-export const minDistance = (circles: Circle[]) => {
-	let ret = 10000;
-	for (let i = 0; i < numCircles; i++) {
-		for (let j = i + 1; j < numCircles; j++) {
-			for (let k = 0; k < 9; k++) {
-				let d = distanceSqr(circles[i].x, circles[i].y, circles[j].x - offset[k][0], circles[j].y - offset[k][1]);
-				if (d < ret) {
-					ret = d
-				}
-				d = distanceSqr(circles[i].x - offset[k][0], circles[i].y - offset[k][1], circles[j].x, circles[j].y);
-				if (d < ret) {
-					ret = d
-
-				}
-			}
-		}
+	return {
+		dx: dxIntAbs < dxExtAbs ? dxInt : dxExt,
+		dy: dyIntAbs < dyExtAbs ? dyInt : dyExt
 	}
 
-	return Math.sqrt(ret) / 2;
-
 }
 
-const circlesCollide = (c0: Circle, c1: Circle, radius) => {
-	let ret = -1
-	for (let i = 0; i < 9; i++) {
-		if (c0.x - c1.x + offset[i][0] < 2 * radius) {
-			if (distanceSqr(c0.x, c0.y, c1.x - offset[i][0], c1.y - offset[i][1]) < 4 * radius * radius) {
-				ret = i;
+export const minDistance = (circles: Circle[], maxRadius?: number): number => {
+	let minDistance = maxRadius || 10000;
 
-			}
-		}
+	for (let i = 0; i < circles.length - 1; i++) {
+		const {dx, dy} = getDeltaXY(circles[i], circles[i + 1]);
+		const distance = Math.sqrt(dx ** 2 + dy ** 2);
+
+		minDistance = Math.min(minDistance, distance);
+
 	}
 
-	return ret
+	return minDistance / 2;
+}
+
+export const hasCollision = (c0: Circle, c1: Circle, radius: number): boolean => {
+	const {dx, dy} = getDeltaXY(c0, c1);
+
+	console.log('hasCollision dx', dx);
+	console.log('hasCollision dy', dy);
+
+	return (dx ** 2 + dy ** 2) < 4 * radius ** 2;
 
 }
 
-const removeCollision = (c0: Circle, c1: Circle, offsetId, radius) => {
 
-	const distance = Math.sqrt(distanceSqr(c0.x, c0.y, c1.x - offset[offsetId][0], c1.y - offset[offsetId][1]));
+const removeCollision = (c0: Circle, c1: Circle, radius, scale = 100) => {
+	const {dx, dy} = getDeltaXY(c0, c1);
+
+	console.log('dx', dx);
+	console.log('dy', dy);
+
+	const distance = Math.sqrt(dx ** 2 + dy ** 2);
+	// const displacement = Math.abs((distance - 2 * radius) / 2);
 	const displacement = radius - distance / 2;
-	const Ux = (c1.x - offset[offsetId][0] - c0.x) / distance
-	const Uy = (c1.y - offset[offsetId][1] - c0.y) / distance
 
-	c0.x = c0.x - displacement * Ux;
-	c0.y = c0.y - displacement * Uy;
-	c1.x = c1.x + displacement * Ux;
-	c1.y = c1.y + displacement * Uy;
+	console.log('distance', distance);
+	console.log('displacement', displacement);
 
-	c1.color = 'red';
+	let ux = dx / distance;
+	let uy = dy / distance;
+
+	console.log('ux', ux);
+	console.log('uy', uy);
+	console.log('ux * displacement', ux * displacement);
+	console.log('c0.x - displacement * ux', c0.x - displacement * ux);
+	console.log('c1.x + displacement * ux', c1.x + displacement * ux);
+	console.log('c0.y - displacement * uy', c0.y - displacement * uy);
+	console.log('c1.y + displacement * uy', c1.y + displacement * uy);
+
+	c0.x = c0.x - displacement * ux;
+	c1.x = c1.x + displacement * ux;
+	c0.y = c0.y + displacement * uy;
+	c0.y = c1.y - displacement * uy;
 
 }
 
 export const removeCollisions = (radius: number, circles: Circle[]) => {
-	for (let i = 0; i < numCircles; i++) {
-		for (let j = i + 1; j < numCircles; j++) {
-			let offsetId = circlesCollide(circles[i], circles[j], radius);
+	console.log('*** removeCollisions', radius);
+	for (let i = 0; i < NUM_CIRCLES; i++) {
+		for (let j = i + 1; j < NUM_CIRCLES; j++) {
+			if (hasCollision(circles[i], circles[j], radius)) {
+				console.log('!!!removeCollision: ');
+				console.log('circles[i].id', circles[i]);
+				console.log(' circles[j].id', circles[j])
 
-			if (offsetId > -1) {
-				// console.log('remove collision', radius);
-				removeCollision(circles[i], circles[j], offsetId, radius);
+				removeCollision(circles[i], circles[j], radius);
 			}
 
 		}
@@ -86,17 +98,16 @@ export const removeCollisions = (radius: number, circles: Circle[]) => {
 
 export const grow = (radius, dr, circles: Circle[]) => {
 	radius = radius + dr;
-	for (let i = 0; i < 10; i++) {
+	for (let i = 0; i < NR_REMOVE_COLLISIONS; i++) {
 		removeCollisions(radius, circles);
-
 	}
 	return radius;
 }
 
 const collisionsCount = (circles: Circle[], c: Circle, radius: number, collisionStr: string) => {
 	let ret = 0;
-	for (let i = 0; i < 10; i++) {
-		if ((circles[i] != c) && (circlesCollide(c, circles[i], radius) > -1)) {
+	for (let i = 0; i < NUM_CIRCLES; i++) {
+		if ((circles[i] != c) && (hasCollision(c, circles[i], radius))) {
 			ret = ret + 1
 			collisionStr += c.id + '-' + circles[i].id + ','
 		}
@@ -105,23 +116,17 @@ const collisionsCount = (circles: Circle[], c: Circle, radius: number, collision
 	return [ret, collisionStr];
 }
 
-
-// def
-// fullCollision(radius, collisionStr)
-// :
-// nColls = 0
-// for i in range(0, numCircles):
-// [count, collisionStr] = collisionsCount(i, radius, collisionStr)
-// nColls = nColls + count
-// return [nColls, collisionStr]
-
 export const fullCollision = (circles: Circle[], radius, collisionStr) => {
 	let nColls = 0;
 	let count;
-	for (let i = 0; i < numCircles; i++) {
-		[count, collisionStr] = collisionsCount(circles, circles[i], radius, collisionStr);
+		[count, collisionStr] = collisionsCount(circles, circles[0], radius, collisionStr);
+		console.log('collisionStr', collisionStr);
 		nColls += count;
-	}
+	// for (let i = 0; i < NUM_CIRCLES; i++) {
+	// 	[count, collisionStr] = collisionsCount(circles, circles[i], radius, collisionStr);
+	// 	console.log('collisionStr', collisionStr);
+	// 	nColls += count;
+	// }
 	// console.log('collisions', nColls);
 	return [nColls, collisionStr];
 }
