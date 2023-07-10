@@ -5,7 +5,7 @@ import OffscreenCanvas from "./lib/circles/OffscreenCanvas";
 
 const App: FC = () => {
 
-	const NR_POINTS = 2;
+	const NR_POINTS = 10;
 
 	const canvasRef = useRef(null)
 
@@ -32,7 +32,6 @@ const App: FC = () => {
 	}
 
 	const drawCircles = (circles: Circle[]) => {
-		console.log('draw');
 		getCtx().clearRect(0, 0, 300, 300);
 		circles.map((circle: Circle, idx: number) =>
 			drawCircle(getCtx(), circle, idx));
@@ -73,7 +72,7 @@ const App: FC = () => {
 
 					}
 
-				}, 1000);
+				}, 0);
 			});
 
 		}
