@@ -5,7 +5,7 @@ import OffscreenCanvas from "./lib/circles/OffscreenCanvas";
 
 const App: FC = () => {
 
-	const NR_POINTS = 19;
+	const NR_POINTS = 10;
 
 	const canvasRef = useRef(null)
 
@@ -38,28 +38,14 @@ const App: FC = () => {
 	}
 
 	useEffect(() => {
-		// const startTime = new Date().getTime();
-		//
-		// offScreenCanvas.resolveCollisions();
-		//
-		// const endTime = new Date().getTime();
-		// const timeDiff = endTime - startTime; //in ms
-		//
-		// console.log('Found in ' + timeDiff + 'milliseconds');
-		//
-		// getCtx().clearRect(0, 0, 300, 300);
-		// getCtx().scale(3, 3);
 		getCtx().clearRect(0, 0, 300, 300);
 		getCtx().scale(3, 3);
-
-		// offScreenCanvas.getCircles()
-		// 	.map((circle: Circle, idx: number) => drawCircle(getCtx(), circle, idx));
 
 	}, []);
 
 	const handleClick = () => {
 		const tryRadius = async (radius: number): Promise<any> => {
-			let it: any = offScreenCanvas.resolveGenerator(radius);
+			let it: any = offScreenCanvas.resolveGenerator();
 
 			return new Promise((resolve) => {
 				let intervalId = setInterval(() => {
@@ -93,7 +79,7 @@ const App: FC = () => {
 
 		(async () => {
 
-			const asyncGen = offScreenCanvas.findOptimalRadius(tryRadius, drawCircles);
+			const asyncGen = offScreenCanvas.findOptimalRadius(tryRadius);
 
 			let next;
 			while (!(next = await asyncGen.next()).done) {
