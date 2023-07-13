@@ -1,4 +1,3 @@
-import {Point} from "../lib/circles";
 
 export default interface Circle {
 	id: string;

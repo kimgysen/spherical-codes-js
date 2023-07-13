@@ -16,6 +16,9 @@ export const generateRandomPoints: (nrPoints: number) => Point[] = (nrPoints) =>
 		})
 	}
 
+	return arr;
+
+	// --- Test data ---
 	// return [
 	// 	// {id: 'c0', x: 0.1, y: 0.1},
 	// 	// {id: 'c1', x: 0.9, y: 0.9},
@@ -52,5 +55,4 @@ export const generateRandomPoints: (nrPoints: number) => Point[] = (nrPoints) =>
 	// 	// {x: 0.74, y: 0.37},
 	// 	// {x: 0.80, y: 0.37},
 	// ]
-	return arr;
 }

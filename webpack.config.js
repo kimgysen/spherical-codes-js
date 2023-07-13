@@ -2,7 +2,7 @@ const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
-	entry: "./src/index.tsx",
+	entry: "./src/browser/index.tsx",
 	module: {
 		rules: [
 			// `js` and `jsx` files are parsed using `babel`
