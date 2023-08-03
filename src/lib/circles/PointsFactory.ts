@@ -1,5 +1,4 @@
-
-export interface Point{
+export interface Point {
 	id: string;
 	x: number;
 	y: number;
@@ -18,6 +17,13 @@ export const generateRandomPoints: (nrPoints: number) => Point[] = (nrPoints) =>
 
 	return arr;
 
+	// return [
+	// 	{id: 'c0', x: 0.3058238870281187, y: 0.2153064302736978},
+	// 	{id: 'c1', x: 0.6830420305773266, y: 0.8489624562504587},
+	// 	{id: 'c2', x: 0.5986615339344823, y: 0.6929702691016115},
+	// 	{id: 'c3', x: 0.0114931067632562, y: 0.0192480941666493},
+	// ];
+	//
 	// --- Test data ---
 	// return [
 	// 	// {id: 'c0', x: 0.1, y: 0.1},

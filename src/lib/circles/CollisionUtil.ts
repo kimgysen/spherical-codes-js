@@ -4,24 +4,25 @@ import Circle from "../../domain/Circle";
 /**
  * Grow the radius with dr and remove collisions one time
  */
-export const growRadius = (circles: any[], radius, dr) => {
+export const growRadius = (circles: any[], radius: number, dr: number) => {
 	const newRadius = radius + dr;
 	const collisions = getCollisions(circles, newRadius);
 
 	removeCollisions(collisions, newRadius);
 
-	return [newRadius, collisions];
+
+	return [newRadius, collisions] as const;
 }
 
 /**
  * Get distance between two points, taken into account Thoroidal space & vector direction
  */
-const getDeltaXY = (c0: Circle, c1: Circle, scale = 100): any => {
+const getDeltaXY = (c0: Circle, c1: Circle): any => {
 	const [dxInt, dyInt] = [c1.x - c0.x, c1.y - c0.y];
 	const [dxIntAbs, dyIntAbs] = [Math.abs(dxInt), Math.abs(dyInt)];
 
 	const [dirX, dirY] = [Math.sign(dxInt), Math.sign(dyInt)]; // Vector direction
-	const [dxExt, dyExt] = [(scale - dxIntAbs) * -dirX, (scale - dyIntAbs) * -dirY];
+	const [dxExt, dyExt] = [(1 - dxIntAbs) * -dirX, (1 - dyIntAbs) * -dirY];
 	const [dxExtAbs, dyExtAbs] = [Math.abs(dxExt), Math.abs(dyExt)];
 
 	return {
@@ -35,7 +36,7 @@ const getDeltaXY = (c0: Circle, c1: Circle, scale = 100): any => {
  * Get collisions between all circles
  * Store c0, c1 and deltaXY for each collision
  */
-export const getCollisions = (circles: Circle[], radius: number) => {
+export const getCollisions = (circles: Circle[], radius: number): any[] => {
 	const collisions = [];
 
 	function saveCollision(c0: Circle, c1: Circle) {
@@ -65,28 +66,35 @@ export const removeCollisions = (collisions: any[], radius: number) => {
 }
 
 /**
+ * Calculate distance
+ */
+export const getDistance = (dx: number, dy: number) => {
+	return Math.sqrt(dx ** 2 + dy ** 2);
+}
+
+/**
  * Remove a single collision
  */
-const removeCollision = (collision: any, radius, scale = 100) => {
+const removeCollision = (collision: any, radius: number) => {
 	const {c0, c1, deltaXY: {dx, dy}} = collision;
 
-	const distance = Math.sqrt(dx ** 2 + dy ** 2);
+	const distance = getDistance(dx, dy);
 	const displacement = radius - distance / 2;
 
 	let ux = dx / distance;
 	let uy = dy / distance;
 
-	c0.x = ((c0.x - displacement * ux) + scale) % scale;
-	c1.x = ((c1.x + displacement * ux) + scale) % scale;
-	c0.y = ((c0.y - displacement * uy) + scale) % scale;
-	c1.y = ((c1.y + displacement * uy) + scale) % scale;
+	c0.x = ((c0.x - displacement * ux) + 1) % 1;
+	c1.x = ((c1.x + displacement * ux) + 1) % 1;
+	c0.y = ((c0.y - displacement * uy) + 1) % 1;
+	c1.y = ((c1.y + displacement * uy) + 1) % 1;
 
 }
 
 /**
  * Find the min distance
  */
-export const minDistance = (collisions: any, maxRadius: number): number => {
+export const minDistance = (collisions: any[], maxRadius: number): number => {
 	let minDistance = maxRadius;
 
 	return collisions.reduce((min,{deltaXY: {dx, dy}}) => {
@@ -108,4 +116,19 @@ export const hasCollision = (deltaXY: any, radius: number): boolean => {
 
 }
 
+/**
+ * Final check to verify if there is an infinite collision.
+ * This can occur when there are perfect horizontal or vertical collisions for 4 or 6 circles
+ * 	that keep solving themselves infinitely in thoroidal space
+ */
+export const hasInfiniteCollision = (circles: Circle[], radius: number, maxPrecision: number) => {
+	const collisions = getCollisions(circles, radius);
+
+	return collisions.some(collision => {
+		const {dx, dy} = collision.deltaXY;
+
+		return Math.abs(2 * radius - getDistance(dx, dy)) > 0.01;
+	});
+
+}
 

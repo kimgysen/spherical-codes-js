@@ -1,9 +1,10 @@
 import InputConfig from "../../domain/InputConfig";
 import {Point} from "../../lib/circles/PointsFactory";
 import Circle from "../../domain/Circle";
-import {growRadius, minDistance} from "../../lib/circles/CollisionUtil";
+import TimeoutError from "./error/TimeoutError";
+import {growRadius, hasInfiniteCollision, minDistance} from "../../lib/circles/CollisionUtil";
+import InfiniteCollisionError from "./error/InfiniteCollisionError";
 
-const DEFAULT_SECTION_SIDE = 100;
 const DEFAULT_MAX_RADIUS = 999999;
 
 
@@ -17,7 +18,7 @@ class ThoroidalSpaceServer {
 
 
 	constructor(points: Point[], cfg: InputConfig) {
-		this._points = points; // Between 0 and 1;
+		this._points = points;
 		this._cfg = cfg;
 
 		this._radius = cfg.initRadius;
@@ -33,30 +34,40 @@ class ThoroidalSpaceServer {
 			return {
 				id: 'c' + idx,
 				radius: radius,
-				x: p.x * DEFAULT_SECTION_SIDE,
-				y: p.y * DEFAULT_SECTION_SIDE
+				x: p.x,
+				y: p.y
 			};
-
 		});
 	}
 
-	public findMaxRadius() {
+	public findMaxRadius(timeoutMs: number) {
+		const start = new Date().getTime();
+
 		const {initRadius, maxPrecision} = this._cfg;
 
-		let circles = this._circles;
-
 		this._radius = initRadius;
-		circles.map(c => c.radius = this._radius);
+		this._circles.map(c => c.radius = this._radius);
 
 		do {
-			this.growRadius();
+			this._growRadius();
+
+			const elapsed = new Date().getTime() - start;
+
+			if (elapsed > timeoutMs) {
+				throw new TimeoutError("Timeout has been reached.");
+			}
 
 		} while (this._dr > maxPrecision);
+
+		if (hasInfiniteCollision(this._circles, this._radius, maxPrecision)) {
+			throw new InfiniteCollisionError("InfiniteCollision.");
+
+		}
 
 		return this._radius;
 	}
 
-	private growRadius() {
+	private _growRadius() {
 		const {maxCollisions, speedFactor} = this._cfg;
 
 		let [newRadius, collisions] = growRadius(this._circles, this._radius, this._dr);
@@ -70,6 +81,10 @@ class ThoroidalSpaceServer {
 		this._radius = newRadius;
 		this._circles.map(c => c.radius = newRadius);
 
+	}
+
+	public getCirclesAfter(): Circle[] {
+		return this._circles;
 	}
 
 }

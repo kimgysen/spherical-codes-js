@@ -5,8 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "npx webpack-dev-server --mode development --open --hot",
-    "build:server": "tsc --outDir ./dist -p tsconfig-server.json",
+    "build:server": "tsc --outDir ./dist -p tsconfig-server.json && npm run copy-files",
     "start:server": "node ./dist/server/index.js",
+    "copy-files": "copyfiles -u 1 \"src/server/**/*.sql\" dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -14,10 +15,13 @@
   "dependencies": {
     "@types/react": "^18.2.6",
     "@types/react-dom": "^18.2.4",
+    "@types/uuid": "^9.0.2",
     "big.js": "^6.2.1",
     "decimal.js": "^10.4.3",
+    "pg-promise": "^11.5.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.21.5",
@@ -29,6 +33,7 @@
     "@types/jest": "^29.5.2",
     "@types/node": "^20.1.4",
     "babel-loader": "^9.1.2",
+    "copyfiles": "^2.4.1",
     "css-loader": "^6.7.3",
     "eslint": "^8.40.0",
     "html-webpack-plugin": "^5.5.1",

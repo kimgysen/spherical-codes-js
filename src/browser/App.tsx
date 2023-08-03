@@ -4,15 +4,17 @@ import ThoroidalSpaceBrowser from "./lib/ThoroidalSpaceBrowser";
 import {generateRandomPoints} from "../lib/circles/PointsFactory";
 import {drawCircles} from "./draw/draw";
 import InputConfig from "../domain/InputConfig";
+import Circle from "../domain/Circle";
 
 
-const NR_POINTS = 10;
+const SCALE = 100;
+const NR_POINTS = 4;
 
 const inputConfig: InputConfig = {
-	initRadius: 5,
+	initRadius: 0.10,
 	speedFactor: 0.90,
-	maxPrecision: 1e-12,
-	maxCollisions: 19
+	maxPrecision: 1e-14,
+	maxCollisions: 4
 }
 
 const App: FC = () => {
@@ -53,7 +55,14 @@ const App: FC = () => {
 						const {status, data: {circles}} = val.value;
 
 						if (status === 'done') {
-							drawCircles(getCtx(), circles);
+							const mapped = circles.map(c => ({
+								id: c.id,
+								x: c.x * SCALE,
+								y: c.y * SCALE,
+								radius: c.radius * 100
+							}));
+
+							drawCircles(getCtx(), mapped);
 						}
 					}
 
@@ -74,14 +83,38 @@ const App: FC = () => {
 				const {radius, circles} = next.value.data;
 
 				if (next.value.status === 'done') {
+					const allCircles = multiplyCircles(circles);
+					drawCircles(getCtx(), allCircles);
+
 					console.log('Max radius foud is: ', radius);
-					console.log('Circles: ', circles);
+					console.log('Circles: ', allCircles);
 
 				}
 			}
 
 		})();
 
+	}
+
+	function multiplyCircles(circles: Circle[]) {
+		return circles.reduce((acc, c) => {
+			c.radius *= SCALE;
+			c.x *= SCALE;
+			c.y *= SCALE;
+
+			const ctl = {...c, x: c.x - SCALE, y: c.y - SCALE};
+			const ctm = {...c, x: c.x, y: c.y - SCALE};
+			const ctr = {...c, x: c.x + SCALE, y: c.y - SCALE};
+			const cml = {...c, x: c.x - SCALE, y: c.y};
+			const cmm = {...c, x: c.x, y: c.y};
+			const cmr = {...c, x: c.x + SCALE, y: c.y};
+			const cbl = {...c, x: c.x - SCALE, y: c.y + SCALE};
+			const cbm = {...c, x: c.x, y: c.y + SCALE};
+			const cbr = {...c, x: c.x + SCALE, y: c.y + SCALE};
+
+			return acc.concat([ctl, ctm, ctr, cml, cmm, cmr, cbl, cbm, cbr]);
+
+		}, []);
 	}
 
 	return (

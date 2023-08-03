@@ -1,9 +1,9 @@
 import {Point} from "../../lib/circles/PointsFactory";
 import Circle from "../../domain/Circle";
-import {growRadius, minDistance} from "../../lib/circles/CollisionUtil";
+import {growRadius, hasInfiniteCollision, minDistance} from "../../lib/circles/CollisionUtil";
 import InputConfig from "../../domain/InputConfig";
+import TimeoutError from "../../server/lib/error/TimeoutError";
 
-const DEFAULT_SECTION_SIDE = 100;
 const DEFAULT_MAX_RADIUS = 999999;
 
 
@@ -15,7 +15,7 @@ class ThoroidalSpaceBrowser {
 	private _dr: number;
 	private _radius: number;
 
-	constructor(points: Point[], cfg: InputConfig, sectionSide = DEFAULT_SECTION_SIDE) {
+	constructor(points: Point[], cfg: InputConfig) {
 		this._points = points; // Between 0 and 1;
 		this._cfg = cfg;
 
@@ -31,36 +31,10 @@ class ThoroidalSpaceBrowser {
 			return {
 				id: 'c' + idx,
 				radius: radius,
-				x: p.x * DEFAULT_SECTION_SIDE,
-				y: p.y * DEFAULT_SECTION_SIDE
+				x: p.x,
+				y: p.y
 			};
-
 		});
-	}
-
-	public growRadiusGenerator(): any {
-		const {maxCollisions, speedFactor} = this._cfg;
-		const circles = this._circles;
-		let radius = this._radius;
-		let dr = this._dr;
-
-		function* generator(_this) {
-			let [newRadius, collisions] = growRadius(circles, radius, dr);
-
-			if (collisions.length >= maxCollisions) {
-				newRadius = minDistance(collisions, DEFAULT_MAX_RADIUS);
-
-				_this._dr = dr * speedFactor;
-			}
-
-			_this._radius = newRadius;
-			_this._circles.map(c => c.radius = newRadius);
-
-			yield {status: 'done', data: {circles}};
-
-		}
-
-		return generator(this);
 
 	}
 
@@ -78,8 +52,38 @@ class ThoroidalSpaceBrowser {
 
 			} while (_this._dr > maxPrecision);
 
-			yield {status: 'done', data: { radius: _this._radius, circles }};
+			if (hasInfiniteCollision(circles, _this._radius, maxPrecision)) {
+				throw new TimeoutError("Has infinite collision.");
+			}
+
+			yield {status: 'done', data: {radius: _this._radius, circles}};
 			return;
+		}
+
+		return generator(this);
+
+	}
+
+	public growRadiusGenerator(): any {
+		const {maxCollisions, speedFactor} = this._cfg;
+		const circles = this._circles;
+		let radius = this._radius;
+		let dr = this._dr;
+
+		function* generator(_this) {
+			let [newRadius, collisions] = growRadius(circles, radius, dr);
+
+			if (collisions.length >= maxCollisions) {
+				newRadius = minDistance(collisions, DEFAULT_MAX_RADIUS);
+
+				_this._dr *= speedFactor;
+			}
+
+			_this._radius = newRadius;
+			_this._circles.map(c => c.radius = newRadius);
+
+			yield {status: 'done', data: {circles}};
+
 		}
 
 		return generator(this);

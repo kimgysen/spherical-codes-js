@@ -1,26 +1,15 @@
-import ThoroidalSpaceServer from "./lib/ThoroidalSpaceServer";
-import InputConfig from "../domain/InputConfig";
-import {generateRandomPoints} from "../lib/circles/PointsFactory";
+import TestRunBatch from "./service/TestRunBatch";
 
-const NR_POINTS = 10;
+const NR_RUNS_PER_COLLISION = 100;
 
-const points = generateRandomPoints(NR_POINTS);
 
-const inputConfig: InputConfig = {
-	initRadius: 5,
-	speedFactor: 0.90,
-	maxPrecision: 1e-16,
-	maxCollisions: 19
-}
+(async () => {
 
-const thoroidalSpace = new ThoroidalSpaceServer(points, inputConfig);
+	for (let i = 4; i <= 4; i++) {
+		const testRunBatch = new TestRunBatch(i, NR_RUNS_PER_COLLISION);
 
-console.log('Trying to find max radius in thoroidal space for ' + points.length + ' points...');
+		await testRunBatch.runTests();
 
-const start = new Date().getTime();
-const maxRadius = thoroidalSpace.findMaxRadius();
-let elapsed = new Date().getTime() - start;
+	}
 
-console.log('maxRadius', maxRadius);
-console.log('time elapsed', elapsed + "ms");
-
+})();
