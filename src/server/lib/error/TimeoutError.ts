@@ -1,6 +1,8 @@
-class TimeoutError {
+class TimeoutError extends Error {
 	constructor(message: string) {
-		return Error(message);
+		super(message);
+
+		Object.setPrototypeOf(this, TimeoutError.prototype);
 	}
 }
 

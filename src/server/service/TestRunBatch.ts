@@ -1,90 +1,101 @@
-import {generateRandomPoints} from "../../lib/circles/PointsFactory";
+import {generateRandomPoints} from "../../common/lib/circles/PointsFactory";
 import ThoroidalSpaceServer from "../lib/ThoroidalSpaceServer";
-import InputConfig from "../../domain/InputConfig";
+import InputConfig from "../../common/domain/InputConfig";
 import TimeoutError from "../lib/error/TimeoutError";
 import TestRunCache from "./TestRunCache";
-import {trimToDecimals} from "../util/Precision";
+import {trimToDecimals} from "../../common/lib/util/PrecisionUtil";
+import InfiniteCollisionError from "../lib/error/InfiniteCollisionError";
 
-const TIMEOUT_MS = 3_000;
-const TRIM_TO_PRECISION = 14;
+const TIMEOUT_MS = 1000_000_000;
+const TRIM_TO_PRECISION = 16;
+const DB_BATCH_SIZE = 6;
 
 const inputConfig: InputConfig = {
-	initRadius: 0.01,
-	speedFactor: 0.90,
-	maxPrecision: 1e-14,
-	maxCollisions: 1
+	initRadius: 0.001,
+	speedFactor: 0.999,
+	maxPrecision: 1e-16
 }
 
 
 class TestRunBatch {
-	private _cache: TestRunCache;
-
 	private readonly _nrPoints: number;
 	private readonly _nrRunsPerCollision: number;
 	private readonly _nrCollisionsMin: number;
 	private readonly _nrCollisionsMax: number;
 
+	private _cache: TestRunCache;
+
 	constructor(nrPoints, nrRunsPerCollision) {
 		this._nrPoints = nrPoints;
 		this._nrRunsPerCollision = nrRunsPerCollision;
-		this._nrCollisionsMin = Math.trunc(1 * nrPoints);
-		this._nrCollisionsMax = Math.trunc(3 * nrPoints);
-
-		this._cache = new TestRunCache(nrPoints, TIMEOUT_MS);
-
+		// this._nrCollisionsMin = Math.trunc(1 * nrPoints);
+		// this._nrCollisionsMax = Math.trunc(3 * nrPoints);
+		this._nrCollisionsMin = 240;
+		this._nrCollisionsMax = 241;
 	}
 
 	public async runTests() {
+
 		let failCnt = 0;
 
 		for (let collisionCnt = this._nrCollisionsMin; collisionCnt < this._nrCollisionsMax; collisionCnt++) {
+			this._cache = new TestRunCache(this._nrPoints, collisionCnt, TIMEOUT_MS, DB_BATCH_SIZE);
+
 			failCnt = 0;
 			for (let runCnt = 0; runCnt < this._nrRunsPerCollision; runCnt++) {
-				const hasSolution: boolean = this.runTest(collisionCnt);
+				const hasSolution: boolean = await this.runTest(collisionCnt);
 
 				if (!hasSolution)
 					failCnt++;
+
 			}
 
 			// If all test runs fail with timeout, there is no use in continuing
-			if (failCnt >= this._nrRunsPerCollision || failCnt >= 100)
+			if (failCnt >= this._nrRunsPerCollision)
 				break;
 
 		}
-
-		// await this._cache.syncDb();
 	}
 
+	public runTest(nrCollisions: number): Promise<boolean> {
 
-	public runTest(nrCollisions: number): boolean {
-		const pointsBefore = generateRandomPoints(this._nrPoints);
+		const pointsBefore = generateRandomPoints(this._nrPoints, TRIM_TO_PRECISION);
 
-		try {
-			console.log('Trying to find max radius in thoroidal space for ' + this._nrPoints + ' points with max collisions: ' + nrCollisions + '...');
-			const thoroidalSpace = new ThoroidalSpaceServer(pointsBefore, {...inputConfig, maxCollisions: nrCollisions});
+		return new Promise(async (resolve, reject) => {
+			try {
+				console.log('Trying to find max radius in thoroidal space for ' + this._nrPoints + ' points with max collisions: ' + nrCollisions + '...');
+				const thoroidalSpace = new ThoroidalSpaceServer(pointsBefore, {...inputConfig, maxCollisions: nrCollisions});
 
-			const start = new Date().getTime();
-			const maxRadius = thoroidalSpace.findMaxRadius(TIMEOUT_MS);
-			const elapsed = new Date().getTime() - start;
+				const start = new Date().getTime();
+				const maxRadius = thoroidalSpace.findMaxRadius(TIMEOUT_MS);
+				const elapsed = new Date().getTime() - start;
 
-			const circlesAfter = thoroidalSpace.getCirclesAfter();
+				const circlesAfter = thoroidalSpace.getCirclesAfter();
 
-			const maxRadiusWithPrecision = trimToDecimals(maxRadius, TRIM_TO_PRECISION);
-			console.log('Max radius found: ', maxRadiusWithPrecision);
+				const maxRadiusWithPrecision = trimToDecimals(maxRadius, TRIM_TO_PRECISION);
+				console.log('Max radius found: ', maxRadiusWithPrecision);
+				console.log('Elapsed', elapsed);
 
-			this._cache.saveSuccess(nrCollisions, maxRadiusWithPrecision, elapsed, pointsBefore, circlesAfter);
+				await this._cache.saveSuccess(maxRadiusWithPrecision, elapsed, pointsBefore, circlesAfter);
 
-			return true;
+				resolve(true);
 
-		} catch (e) {
-			if (e instanceof TimeoutError) {
-				console.log('Timed out');
-				this._cache.saveFail(nrCollisions, pointsBefore);
+			} catch (e) {
+				if (e instanceof TimeoutError) {
+					console.log('Timed out');
+
+				} else if (e instanceof InfiniteCollisionError) {
+					console.log('Infinite collision');
+
+				} else {
+					console.log(e);
+
+				}
+
+				resolve(false);
 
 			}
-
-			return false;
-		}
+		})
 	}
 
 

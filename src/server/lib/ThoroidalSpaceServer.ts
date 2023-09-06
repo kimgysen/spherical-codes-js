@@ -1,8 +1,8 @@
-import InputConfig from "../../domain/InputConfig";
-import {Point} from "../../lib/circles/PointsFactory";
-import Circle from "../../domain/Circle";
+import InputConfig from "../../common/domain/InputConfig";
+import {Point} from "../../common/lib/circles/PointsFactory";
+import Circle from "../../common/domain/Circle";
 import TimeoutError from "./error/TimeoutError";
-import {growRadius, hasInfiniteCollision, minDistance} from "../../lib/circles/CollisionUtil";
+import {growRadius, hasInfiniteCollision, minDistance, removeCollisions} from "../../common/lib/circles/CollisionLib";
 import InfiniteCollisionError from "./error/InfiniteCollisionError";
 
 const DEFAULT_MAX_RADIUS = 999999;
@@ -46,7 +46,6 @@ class ThoroidalSpaceServer {
 		const {initRadius, maxPrecision} = this._cfg;
 
 		this._radius = initRadius;
-		this._circles.map(c => c.radius = this._radius);
 
 		do {
 			this._growRadius();
@@ -70,16 +69,17 @@ class ThoroidalSpaceServer {
 	private _growRadius() {
 		const {maxCollisions, speedFactor} = this._cfg;
 
-		let [newRadius, collisions] = growRadius(this._circles, this._radius, this._dr);
+		let {grownRadius, collisions} = growRadius(this._circles, this._radius, this._dr);
+
+		removeCollisions(collisions, grownRadius);
 
 		if (collisions.length >= maxCollisions) {
-			newRadius = minDistance(collisions, DEFAULT_MAX_RADIUS);
+			grownRadius = minDistance(collisions, DEFAULT_MAX_RADIUS) / 2;
 
 			this._dr *= speedFactor;
 		}
 
-		this._radius = newRadius;
-		this._circles.map(c => c.radius = newRadius);
+		this._radius = grownRadius;
 
 	}
 

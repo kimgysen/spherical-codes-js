@@ -1,7 +1,8 @@
-class InfiniteCollisionError {
+class InfiniteCollisionError extends Error {
 	constructor(message: string) {
-		return Error(message);
-	}
-}
+		super(message);
+
+		Object.setPrototypeOf(this, InfiniteCollisionError.prototype);
+	}}
 
 export default InfiniteCollisionError;

@@ -12,7 +12,7 @@ interface CanvasProps {
     canvasRef: RefObject<HTMLCanvasElement>
 }
 
-const Canvas = (props: CanvasProps) => {
+const CanvasCmp = (props: CanvasProps) => {
     const { options, canvasRef } = props;
     const { canvasWidth, canvasHeight } = options;
 
@@ -25,4 +25,4 @@ const Canvas = (props: CanvasProps) => {
     />
 }
 
-export default Canvas;
+export default CanvasCmp;
