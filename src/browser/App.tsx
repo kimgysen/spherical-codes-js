@@ -7,7 +7,6 @@ const App: FC = () => {
 	return (
 		<div className='app'>
 			<ThoroidalCirclesCmp />
-			<VerifyCirclesCmp />
 		</div>
 	);
 };

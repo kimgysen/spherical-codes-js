@@ -1,7 +1,8 @@
-import Circle from "../../domain/Circle";
-import Collision from "../../domain/Collision";
-import DeltaXY from "../../domain/DeltaXY";
-import {iterateUniqueCirclePairs} from "../util/IterateCirclesUtil";
+import Circle from "../domain/Circle";
+import Collision from "../domain/Collision";
+import DeltaXY from "../domain/DeltaXY";
+import {iterateUniqueCirclePairs} from "./util/IterateCirclesUtil";
+import Distance from "../domain/Distance";
 
 
 /**
@@ -49,6 +50,16 @@ export const getCollisions = (circles: Circle[], radius: number): Collision[] =>
 	});
 
 	return collisions;
+}
+
+/**
+ * Get all distances between all circles
+ */
+export const getAllDistances = (circles: Circle[]): Distance[] => {
+	iterateUniqueCirclePairs(circles, (c0: Circle, c1: Circle) => {
+
+	});
+	return [];
 }
 
 /**

@@ -1,4 +1,4 @@
-import {generateRandomPoints} from "../../common/lib/circles/PointsFactory";
+import {generateRandomPoints} from "../../common/lib/factory/PointsFactory";
 import ThoroidalSpaceServer from "../lib/ThoroidalSpaceServer";
 import InputConfig from "../../common/domain/InputConfig";
 import TimeoutError from "../lib/error/TimeoutError";
@@ -6,14 +6,15 @@ import TestRunCache from "./TestRunCache";
 import {trimToDecimals} from "../../common/lib/util/PrecisionUtil";
 import InfiniteCollisionError from "../lib/error/InfiniteCollisionError";
 
-const TIMEOUT_MS = 1000_000_000;
-const TRIM_TO_PRECISION = 16;
-const DB_BATCH_SIZE = 6;
+const TIMEOUT_MS = 500_000;
+const TRIM_TO_PRECISION = 14;
+const DB_BATCH_SIZE = 2;
 
 const inputConfig: InputConfig = {
-	initRadius: 0.001,
-	speedFactor: 0.999,
-	maxPrecision: 1e-16
+	initRadius: 0.01,
+	initDr: 0.01,
+	speedFactor: 0.9999,
+	maxPrecision: 14
 }
 
 
@@ -30,8 +31,8 @@ class TestRunBatch {
 		this._nrRunsPerCollision = nrRunsPerCollision;
 		// this._nrCollisionsMin = Math.trunc(1 * nrPoints);
 		// this._nrCollisionsMax = Math.trunc(3 * nrPoints);
-		this._nrCollisionsMin = 240;
-		this._nrCollisionsMax = 241;
+		this._nrCollisionsMin = 51;
+		this._nrCollisionsMax = 52;
 	}
 
 	public async runTests() {

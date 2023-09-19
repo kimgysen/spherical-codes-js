@@ -1,79 +1,53 @@
-import {Point} from "../../common/lib/circles/PointsFactory";
+import {Point} from "../../common/lib/factory/PointsFactory";
 import Circle from "../../common/domain/Circle";
-import {growRadius, hasInfiniteCollision, minDistance, removeCollisions} from "../../common/lib/circles/CollisionLib";
+import {growRadius, hasInfiniteCollision, minDistance, removeCollisions} from "../../common/lib/CollisionLib";
 import InputConfig from "../../common/domain/InputConfig";
+import {precisionAsDecimal} from "../../common/lib/util/PrecisionUtil";
 
 
 class ThoroidalSpaceBrowser {
 
-	private _cfg: InputConfig;
-	private _points: Point[];
-	private _circles: Circle[];
 	private _dr: number;
 	private _radius: number;
+	private _maxCollisions: number;
+	private _speedFactor: number;
+	private _maxPrecision: number;
+
+	private _circles: Circle[];
 
 	constructor(points: Point[], cfg: InputConfig) {
-		this._points = points;
-		this._cfg = {...cfg, maxPrecision: Math.pow(0.1, cfg.maxPrecision)};
-
 		this._radius = cfg.initRadius;
-		this._dr = 0.10;
+		this._dr = cfg.initDr;
+		this._maxCollisions = cfg.maxCollisions;
+		this._speedFactor = cfg.speedFactor;
+		this._maxPrecision = precisionAsDecimal(cfg.maxPrecision);
 
-		this._initCircles(cfg.initRadius);
-	}
-
-	public _initCircles(radius: number) {
-		this._circles = this._points.map(
-			(point: Point, idx: number) => ({ id: 'c' + idx, ...point }));
-
+		this._circles = points;
 	}
 
 	public findMaxRadius(fnGrowRadius: () => Promise<any>) {
-		const {initRadius, maxPrecision} = this._cfg;
-
-		let circles = this._circles;
 
 		async function* generator(_this) {
-			_this._radius = initRadius;
 
 			do {
 				await fnGrowRadius();
 
-			} while (_this._dr > maxPrecision);
+			} while (_this._dr > _this._maxPrecision);
 
-			if (hasInfiniteCollision(circles, _this._radius, maxPrecision)) {
+			if (hasInfiniteCollision(_this._circles, _this._radius, _this._maxPrecision)) {
 				yield {status: 'failed', msg: 'Infinite collision'};
 				return;
 			}
 
-			yield {status: 'done', data: {radius: _this._radius, circles}};
+			yield {status: 'done', data: {radius: _this._radius, circles: _this._circles}};
 			return;
 		}
 
 		return generator(this);
 
 	}
-	// async *growRadiusGenerator() {
-	// 	const {maxCollisions, speedFactor} = this._cfg;
-	//
-	// 	let {grownRadius, collisions} = growRadius(this._circles, this._radius, this._dr);
-	//
-	// 	removeCollisions(collisions, grownRadius);
-	//
-	// 	if (collisions.length >= maxCollisions) {
-	// 		this._radius = minDistance(collisions) / 2;
-	// 		this._dr *= speedFactor;
-	//
-	// 	}
-	//
-	// 	// _this._radius = grownRadius;
-	//
-	// 	yield {status: 'done', data: {grownRadius, circles: this._circles}};
-	//
-	// }
 
-	public growRadiusGenerator(): any {
-		const {maxCollisions, speedFactor} = this._cfg;
+	public optimizeGeometryGenerator(): any {
 		const circles = this._circles;
 		let radius = this._radius;
 		let dr = this._dr;
@@ -81,15 +55,15 @@ class ThoroidalSpaceBrowser {
 		function* generator(_this) {
 			let {grownRadius, collisions} = growRadius(circles, radius, dr);
 
-			removeCollisions(collisions, grownRadius);
-
-			if (collisions.length >= maxCollisions) {
+			if (collisions.length >= _this._maxCollisions) {
 				grownRadius = minDistance(collisions) / 2;
-				_this._dr *= speedFactor;
+				_this._dr *= _this._speedFactor;
+
+			} else {
+				removeCollisions(collisions, grownRadius);
+				_this._radius = grownRadius;
 
 			}
-
-			_this._radius = grownRadius;
 
 			yield {status: 'done', data: {grownRadius, circles}};
 

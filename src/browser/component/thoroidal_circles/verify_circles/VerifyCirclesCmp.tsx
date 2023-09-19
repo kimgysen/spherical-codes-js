@@ -1,10 +1,10 @@
 import {FC, useRef} from "react";
 import circlesJSON from "./CirclesToVerifyJSON";
-import {getCollisions, getDistance, minDistance} from "../../../../common/lib/circles/CollisionLib";
+import {getCollisions, getDistance, minDistance} from "../../../../common/lib/CollisionLib";
 import CanvasCmp from "../../canvas/CanvasCmp";
 import Circle from "../../../../common/domain/Circle";
 import {drawCircle, drawContactGraph} from "../../../draw/draw";
-import {scaleCircles} from "../thoroidal_circles/ThoroidalSpaceHelper";
+import {multiplyCircles, scaleCircles} from "../thoroidal_circles/ThoroidalSpaceHelper";
 import {buildContactGraph} from "../../../../common/lib/geometrical_complexity/ComplexityIndexLib";
 
 
@@ -24,15 +24,14 @@ const VerifyCirclesCmp: FC = () => {
 	}
 
 	const handleClick = () => {
-		const radius = 0.06548051468676;
+		const radius = 0.09882400675689;
 		const circles = circlesJSON.map(c => ({...c, radius }));
 
-		drawCircles(getCtx(), scaleCircles(circles, 900), radius * 900);
-
-		const contactGraph = buildContactGraph(circles, radius, 1e-16);
-		console.log(contactGraph.edges);
-		drawContactGraph(getCtx(), contactGraph, 900);
-
+		// drawCircles(getCtx(), multiplyCircles(circles, 900), radius * 900);
+		//
+		// const contactGraph = buildContactGraph(circles, radius, 1e-16);
+		// console.log(contactGraph.edges);
+		// drawContactGraph(getCtx(), contactGraph, 900);
 
 	}
 

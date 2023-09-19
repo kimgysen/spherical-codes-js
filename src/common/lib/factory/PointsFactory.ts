@@ -1,11 +1,10 @@
 import {trimToDecimals} from "../util/PrecisionUtil";
 
 export interface Point {
-	id: string;
+	id: number;
 	x: number;
 	y: number;
 }
-
 
 export const generateRandomPoints: (nrPoints: number, precision: number) => Point[] = (nrPoints, precision) => {
 	const arr = [];

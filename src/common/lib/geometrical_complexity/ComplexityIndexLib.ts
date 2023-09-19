@@ -1,5 +1,5 @@
 import Circle from "../../domain/Circle";
-import {getDistance, getShortestThoroidalDeltaXY} from "../circles/CollisionLib";
+import {getDistance, getShortestThoroidalDeltaXY} from "../CollisionLib";
 import {trimToDecimals} from "../util/PrecisionUtil";
 import {iterateUniqueCirclePairs} from "../util/IterateCirclesUtil";
 

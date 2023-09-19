@@ -1,5 +1,5 @@
 import Circle from "../../../../common/domain/Circle";
-import {getShortestThoroidalDeltaXY} from "../../../../common/lib/circles/CollisionLib";
+import {getShortestThoroidalDeltaXY} from "../../../../common/lib/CollisionLib";
 
 export const scaleCircles = (circles: Circle[], scale: number) => {
 	return circles.map(c => ({

@@ -1,5 +1,5 @@
 import {PointModel, TestRunModel} from "../db/model/models";
-import {Point} from "../../common/lib/circles/PointsFactory";
+import {Point} from "../../common/lib/factory/PointsFactory";
 import Circle from "../../common/domain/Circle";
 import {v4 as uuidv4} from "uuid";
 import {db} from "../db";
