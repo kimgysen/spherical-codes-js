@@ -1,8 +1,56 @@
+/*@font-face {*/
+/*    font-family: "Computer";*/
+/*    src: local("Computer"), url("../assets/fonts/ComputerRobot-vJlL.ttf") format("ttf");*/
+/*}*/
+
 .app {
     font-family: Arial, Helvetica, sans-serif;
-    padding: 20px;
+    font-size: 24px;
+}
+
+.header {
+    position: fixed;
+    height: 60px;
+    width: 100%;
+    z-index: 999;
+}
+
+.app-body {
+    padding-top: 80px;
 }
 
 .float-left {
     float: left;
+}
+
+.center {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.left-section {
+    float: left;
+    width: 200px;
+}
+
+.right-section {
+    float: right;
+    width: 200px;
+}
+
+.left-section .container, .right-section .container {
+    font-size: 14px;
+    max-width: 400px;
+    background-color: #f7f1f8;
+    margin-top: 20px;
+    padding: 5px 20px 20px;
+    border-radius: 4px;
+}
+
+.mid-section {
+    padding: 20px;
+}
+
+.json-format pre {
+    font-family: Arial, Helvetica, sans-serif;
 }

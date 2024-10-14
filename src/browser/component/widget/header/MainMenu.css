@@ -1,0 +1,22 @@
+
+.main-menu {
+    float: right;
+}
+
+.main-menu li{
+    display: inline-block;
+    height: 60px;
+    line-height: 70px;
+    padding: 0 10px;
+    cursor: pointer;
+}
+
+.main-menu li.active{
+    background-color: #793f83;
+}
+
+.main-menu img {
+    color: white;
+    height: 30px;
+    width: 30px;
+}
