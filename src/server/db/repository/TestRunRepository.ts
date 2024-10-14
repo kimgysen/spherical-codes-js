@@ -1,5 +1,5 @@
 import {ColumnSet, IDatabase, IMain} from "pg-promise";
-import {TestRunModel} from "../model/models";
+import {TestRunDbModel} from "../model/models";
 
 
 class TestRunRepository {
@@ -15,7 +15,7 @@ class TestRunRepository {
 
 	}
 
-	async add(testRuns: TestRunModel[]): Promise<string[]> {
+	async add(testRuns: TestRunDbModel[]): Promise<string[]> {
 		// generating a multi-row insert query:
 		const query = this.pgp.helpers.insert(testRuns, this._cs);
 		return this.db.none(query);

@@ -1,0 +1,22 @@
+
+.header {
+    background-color: #301934;
+}
+
+.header .title {
+    line-height: 60px;
+    vertical-align: middle;
+    float: left;
+}
+
+.header h1 {
+    font-family: "Computer", serif;
+    font-size: 45px;
+    font-weight: 600;
+    color: #fdfdfe;
+    text-shadow: 0 0 5px #b393d3, 0 0 10px #b393d3, 0 0 10px #b393d3, 0 0 20px #b393d3;
+}
+
+.sub-header {
+
+}

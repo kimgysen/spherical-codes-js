@@ -1,8 +1,10 @@
 const path = require("path");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin")
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
 	entry: "./src/browser/index.tsx",
+	plugins: [new MiniCssExtractPlugin()],
 	module: {
 		rules: [
 			// `js` and `jsx` files are parsed using `babel`
@@ -19,6 +21,18 @@ module.exports = {
 			{
 				test: /\.css$/,
 				use: ['style-loader', 'css-loader']
+			},
+			{
+				test: /\.scss$/i,
+				use: [MiniCssExtractPlugin.loader, "css-loader", "sass-loader"],
+			},
+			{
+				test: /\.(png|jp(e*)g|svg|gif)$/,
+				type: "asset/resource",
+			},
+			{
+				test: /\.(woff(2)?|ttf|eot)$/,
+				type: "asset/resource",
 			}
 		],
 	},
